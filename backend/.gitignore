@@ -1,0 +1,7 @@
+node_modules/
+.env
+uploads/qrcodes/*
+uploads/banners/*
+!uploads/qrcodes/.gitkeep
+!uploads/banners/.gitkeep
+*.log
