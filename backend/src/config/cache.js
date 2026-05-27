@@ -1,31 +1,58 @@
-// Simple In-Memory Cache (No external server required)
-const cache = new Map();
+const { db } = require('./firestore');
 
 const getCache = async (key) => {
-  const item = cache.get(key);
-  if (!item) return null;
-  
-  if (Date.now() > item.expiry) {
-    cache.delete(key);
+  try {
+    const docRef = db.collection('qr_cache').doc(key);
+    const doc = await docRef.get();
+    if (!doc.exists) return null;
+    
+    const data = doc.data();
+    if (Date.now() > data.expiry) {
+      await docRef.delete();
+      return null;
+    }
+    return data.value;
+  } catch (error) {
+    console.error(`Error in getCache for key ${key}:`, error.message);
     return null;
   }
-  return item.value;
 };
 
 const setCache = async (key, value, expirationInSeconds = 3600) => {
-  const expiry = Date.now() + (expirationInSeconds * 1000);
-  cache.set(key, { value, expiry });
+  try {
+    const expiry = Date.now() + (expirationInSeconds * 1000);
+    await db.collection('qr_cache').doc(key).set({
+      value,
+      expiry
+    });
+  } catch (error) {
+    console.error(`Error in setCache for key ${key}:`, error.message);
+  }
 };
 
 const delCache = async (keyPattern) => {
-  // Simple pattern matching for our use cases (e.g., 'all_events_*')
-  const regexPattern = keyPattern.replace(/\*/g, '.*');
-  const regex = new RegExp(`^${regexPattern}$`);
-  
-  for (const key of cache.keys()) {
-    if (regex.test(key)) {
-      cache.delete(key);
+  try {
+    // For direct/specific keys
+    if (!keyPattern.includes('*')) {
+      await db.collection('qr_cache').doc(keyPattern).delete();
+      return;
     }
+    
+    // For wildcard patterns (e.g. all_events_*)
+    const snapshot = await db.collection('qr_cache').get();
+    const regexPattern = keyPattern.replace(/\*/g, '.*');
+    const regex = new RegExp(`^${regexPattern}$`);
+    
+    const batch = [];
+    snapshot.forEach(doc => {
+      if (regex.test(doc.id)) {
+        batch.push(db.collection('qr_cache').doc(doc.id).delete());
+      }
+    });
+    
+    await Promise.all(batch);
+  } catch (error) {
+    console.error(`Error in delCache for pattern ${keyPattern}:`, error.message);
   }
 };
 

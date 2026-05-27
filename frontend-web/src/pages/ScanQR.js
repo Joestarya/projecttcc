@@ -1,36 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Card, CardContent, Button, Box, CircularProgress, Alert } from '@mui/material';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Typography, Card, CardContent, Button, Box, CircularProgress, Alert, Grid } from '@mui/material';
+import { CameraAlt as CameraIcon, Image as UploadIcon, ArrowBack as BackIcon } from '@mui/icons-material';
+import { Html5Qrcode } from 'html5-qrcode';
 import api from '../services/api';
 
 const ScanQR = () => {
+  const [mode, setMode] = useState(null); // null (menu selection), 'camera'
   const [scanResult, setScanResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const qrCodeRef = useRef(null);
 
   useEffect(() => {
-    // Inisialisasi Scanner
-    const scanner = new Html5QrcodeScanner("reader", {
-      qrbox: { width: 250, height: 250 },
-      fps: 5,
-    });
-
-    scanner.render(
-      (decodedText) => {
-        // Ketika berhasil membaca barcode
-        scanner.clear();
-        handleValidateQR(decodedText);
-      },
-      (error) => {
-        // Error scan berulang, bisa diabaikan
-      }
-    );
-
     return () => {
-      scanner.clear();
+      // Cleanup: stop scanning on unmount
+      if (qrCodeRef.current && qrCodeRef.current.isScanning) {
+        qrCodeRef.current.stop().catch(err => console.error("Unmount cleanup error:", err));
+      }
     };
   }, []);
+
+  const startCamera = async () => {
+    setMode('camera');
+    setError('');
+    setSuccess('');
+    setScanResult(null);
+    
+    // Allow React a tick to mount the <div id="reader"> element
+    setTimeout(async () => {
+      try {
+        const html5QrCode = new Html5Qrcode("reader");
+        qrCodeRef.current = html5QrCode;
+        
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          },
+          (decodedText) => {
+            // Successful QR code scan
+            stopCamera();
+            setMode(null);
+            handleValidateQR(decodedText);
+          },
+          (errorMessage) => {
+            // Verbose error, ignore
+          }
+        );
+      } catch (err) {
+        console.error("Failed to start camera:", err);
+        setError("Gagal mengakses kamera. Pastikan Anda memberikan izin kamera.");
+        setMode(null);
+      }
+    }, 100);
+  };
+
+  const stopCamera = async () => {
+    if (qrCodeRef.current && qrCodeRef.current.isScanning) {
+      try {
+        await qrCodeRef.current.stop();
+      } catch (err) {
+        console.error("Failed to stop camera:", err);
+      }
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    setScanResult(null);
+
+    try {
+      const html5QrCode = new Html5Qrcode("file-reader-dummy");
+      const decodedText = await html5QrCode.scanFile(file, true);
+      await handleValidateQR(decodedText);
+    } catch (err) {
+      console.error("Failed to scan file:", err);
+      setError("Gagal mendeteksi QR Code dari gambar. Pastikan gambar memiliki QR Code yang jelas.");
+    } finally {
+      setLoading(false);
+      e.target.value = ''; // Reset file input
+    }
+  };
 
   const handleValidateQR = async (qrCode) => {
     setLoading(true);
@@ -43,6 +100,8 @@ const ScanQR = () => {
         setScanResult(response.data.data);
         if (response.data.data.check_in_status === 'checked_in') {
           setError('Tiket sudah pernah digunakan (Checked In)!');
+        } else {
+          setSuccess('Tiket valid dan siap check-in.');
         }
       }
     } catch (err) {
@@ -70,54 +129,139 @@ const ScanQR = () => {
     }
   };
 
-  const resumeScanning = () => {
-    setScanResult(null);
-    setError('');
-    setSuccess('');
-    // Scanner.resume() requires reference, but for simplicity we just rely on component reload or we can just say "Refresh the page to scan again" 
-    // or re-mount the component. In this case, we'll force reload to re-init scanner.
-    window.location.reload(); 
-  };
-
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
           Scanner Tiket (Gate Keeper)
         </Typography>
         
-        {!scanResult && (
-          <Card>
+        {/* Hidden dummy element required by html5-qrcode for file scanning */}
+        <div id="file-reader-dummy" style={{ display: 'none' }}></div>
+
+        {error && <Alert severity="error" sx={{ mt: 2, mb: 2 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mt: 2, mb: 2 }}>{success}</Alert>}
+        
+        {loading && (
+          <Box display="flex" justifyContent="center" m={2}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {/* 1. SELECTION MENU */}
+        {mode === null && !scanResult && (
+          <Card sx={{ p: 4, mt: 2, borderRadius: 3, boxShadow: 3 }}>
+            <Typography variant="h6" align="center" gutterBottom sx={{ mb: 4 }}>
+              Pilih metode pemindaian kode QR tiket:
+            </Typography>
+            <Grid container spacing={4} justifyContent="center">
+              <Grid item xs={12} sm={6}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  size="large"
+                  startIcon={<CameraIcon sx={{ fontSize: 40 }} />}
+                  onClick={startCamera}
+                  sx={{ py: 4, borderRadius: 2, flexDirection: 'column', gap: 1 }}
+                >
+                  <Typography variant="button" fontSize="1.1rem" fontWeight="bold">
+                    Scan via Kamera
+                  </Typography>
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  component="label"
+                  fullWidth
+                  size="large"
+                  startIcon={<UploadIcon sx={{ fontSize: 40 }} />}
+                  sx={{ py: 4, borderRadius: 2, flexDirection: 'column', gap: 1 }}
+                >
+                  <Typography variant="button" fontSize="1.1rem" fontWeight="bold">
+                    Unggah Gambar QR
+                  </Typography>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileChange}
+                  />
+                </Button>
+              </Grid>
+            </Grid>
+          </Card>
+        )}
+
+        {/* 2. CAMERA RUNNING VIEW */}
+        {mode === 'camera' && !scanResult && (
+          <Card sx={{ mt: 2, p: 2, borderRadius: 3 }}>
             <CardContent>
-              <div id="reader" width="100%"></div>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6">Pemindaian Kamera Aktif</Typography>
+                <Button 
+                  startIcon={<BackIcon />} 
+                  variant="outlined" 
+                  onClick={async () => {
+                    await stopCamera();
+                    setMode(null);
+                  }}
+                >
+                  Kembali
+                </Button>
+              </Box>
+              <Box 
+                id="reader" 
+                sx={{ 
+                  width: '100%', 
+                  maxWidth: '500px', 
+                  margin: '0 auto', 
+                  borderRadius: 3, 
+                  overflow: 'hidden',
+                  border: '1px solid #ddd',
+                  bgcolor: 'black'
+                }}
+              />
             </CardContent>
           </Card>
         )}
 
-        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
-        
-        {loading && <CircularProgress sx={{ mt: 2 }} />}
-
+        {/* 3. SCAN RESULT VIEW */}
         {scanResult && (
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Typography variant="h5" color="primary">Detail Tiket Valid</Typography>
-              <Typography variant="body1"><b>Nama Pembeli:</b> {scanResult.User?.full_name}</Typography>
-              <Typography variant="body1"><b>Email:</b> {scanResult.User?.email}</Typography>
-              <Typography variant="body1"><b>Event:</b> {scanResult.Event?.title}</Typography>
-              <Typography variant="body1"><b>Kategori Tiket:</b> {scanResult.Ticket?.category}</Typography>
-              <Typography variant="body1" sx={{ mt: 1, color: scanResult.check_in_status === 'checked_in' ? 'red' : 'green', fontWeight: 'bold' }}>
-                Status: {scanResult.check_in_status === 'checked_in' ? 'SUDAH DIGUNAKAN' : 'BELUM DIGUNAKAN'}
+          <Card sx={{ mt: 2, borderRadius: 3, boxShadow: 3 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Typography variant="h5" color="primary" fontWeight="bold" gutterBottom>
+                Detail Tiket Hasil Scan
               </Typography>
               
-              <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Typography variant="body1"><b>Nama Pembeli:</b> {scanResult.User?.full_name || 'Tidak diketahui'}</Typography>
+                <Typography variant="body1"><b>Email:</b> {scanResult.User?.email || '-'}</Typography>
+                <Typography variant="body1"><b>Event:</b> {scanResult.Event?.title || '-'}</Typography>
+                <Typography variant="body1"><b>Kategori Tiket:</b> {scanResult.Ticket?.category || '-'}</Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: scanResult.check_in_status === 'checked_in' ? 'red' : 'green', fontWeight: 'bold' }}>
+                  Status Tiket: {scanResult.check_in_status === 'checked_in' ? 'SUDAH DIGUNAKAN' : 'BELUM DIGUNAKAN'}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
                 {scanResult.check_in_status !== 'checked_in' && (
-                  <Button variant="contained" color="success" onClick={handleCheckIn} disabled={loading}>
+                  <Button variant="contained" color="success" size="large" onClick={handleCheckIn} disabled={loading}>
                     Konfirmasi Check-In
                   </Button>
                 )}
-                <Button variant="outlined" onClick={resumeScanning}>
+                <Button 
+                  variant="outlined" 
+                  size="large" 
+                  onClick={() => {
+                    setScanResult(null);
+                    setError('');
+                    setSuccess('');
+                    setMode(null);
+                  }}
+                >
                   Scan Tiket Lain
                 </Button>
               </Box>

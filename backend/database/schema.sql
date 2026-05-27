@@ -1,4 +1,6 @@
 -- Database: concert_ticketing
+CREATE DATABASE IF NOT EXISTS concert_ticketing;
+USE concert_ticketing;
 
 -- Drop tables if exists (untuk fresh install)
 DROP TABLE IF EXISTS notifications;
@@ -113,7 +115,7 @@ CREATE TABLE notifications (
 
 -- Insert dummy admin user (password: admin123)
 INSERT INTO users (email, password_hash, full_name, phone, role) VALUES
-('admin@concert.com', ' ', 'Admin Concert', '081234567890', 'admin');
+('admin@concert.com', '$2b$10$xfOESF6uvQPywjJjiVMsiuYwqA94gVrptbuvhO6tO2KXfRykT7Ilu', 'Admin Concert', '081234567890', 'admin');
 
 -- Insert dummy event
 INSERT INTO events (title, description, venue, event_date, status, created_by) VALUES

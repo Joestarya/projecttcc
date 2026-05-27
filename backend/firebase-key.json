@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "concert-ticketing-94601",
+  "private_key_id": "279ae6fed03d588a781324afb577423725e1dbb0",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDIdKrKaA4kRlxX\nCPZMr4TXDHTYRPv6xUm13hrQJCkX1ZGNXYR/xs1CjDIRCEi9Ub5nAgy9b4QSxhKz\na9fdjRumyE+yXycH1BdYyWZzB6A/lZUWZlYA5PunsPFCRRmoF+VC1j/muwSgwqPw\nEPMDlapPA30b0jD1PTKAGoWadaJSc/qAaLwf+S90q124bkUKmK808QSAn4Fnp1RD\nSN+jfMp0zb05QzGNS/7DUdca1LPxmza9wLVU9unbw6EMeMhFAjm0Hk43CQjDXcoc\nQjqRheMG6ydv//U8+PLeUfGhKds1MjpCU0lXeYUeZFgaPl9CI+fOSRd0SjwF8Eo7\nvJ26IUtpAgMBAAECggEAMRtbp8A8DqjqACxi4kBxY5lamoyzyihAuXwSx4DETGF2\nidIqHn9eU3oy3bdQ0ohPA78dzd6e1VaOyEOYG19xMbeKxqDG2AUePxL/tRheKpWD\nc3xYf1mZSOhxAhIZifNop6oC94xDQvrL3Ijab7tfgIHTSViBw+JdF8LnjgJZZKcz\nKz8JUWKAUVS6QYTr4jRPCz97ohLrQuiSYmpomV1yht8PgWdgpCG58feOhxJq3SIv\nh5MqIfIT5Hx5kaCJY2PhAhT+2U0c8sGjVnHHYEdq9IZ24zX5yFIBZHZ7lWpj8UzM\nP+m4OsAkhrBWXSfI0Cn4NTQ5VVzEVybZyyHawYg3MQKBgQD+qiJj9/ORSpM7ob5C\nUzHkQASqILVixIclm1irVX9GrHHpPPfhnhzffXah6/3U1mu9Un9v76uqYYEUjZJb\npvZZGvOdqjnFNXEgKcdIr2e0lb8SH71WhrPY3K/jUXKnNI6yw2NiH/rHgSPtN1rI\n+VQLt+LyGGilSxdCgW1pGQ8v9QKBgQDJgcMTF0xfEm5OuzDz8vxSpDNHdG1b8v9x\nLfX9/7sGap+e+e+omO5Bgxf/tW79WG4cw+pDSgY5TDx9H3dp5FQaSeMg9Xl1dwSQ\nbv6PLn+mjt8TzcyDmbcpf2UMgt5DXNaHd/QgW1mRark3qZh4Qq0wXvmAtypydLOr\n5lLf8CjJJQKBgHm0JStRW/2bfjGJYruftsA2OAR2DTleYpf+XanD+kd0MhwdHvmb\n7oCAHSnU9kG5F1QrEOwVxhxu7Jk97ywN5r0+vB4lM+ajW6TbUnnSGeWbiuzGbl3j\nkh+ZmBUy33A5Fdkot141mkut09WSFrjlLt1KzBKWx6v27u7Bm+AWMcPhAoGBAJbn\nRWZroTblf5QYXT2jb1CYRQqy5x7f6GoiyECSHcZdXPJaLB7vgCWxfexyPA8gBT4n\nfa0sp2KLdBUj1nKHmnAheyV4j5/nJJThemNRqCjcf7S9/vVizScXj14CN17tDH9g\n1oLQxk+/Q7uql1MgY8CAr4q0IOab/N2z28Z2fKS9AoGBALxVCCqTBbdNvoXYt4R/\n+RrcmPxXN7ZJY8Bu7O+ow7196BvAfxV0TUBleNTIM222Xv65kexQdEjvNxmb4a/o\nH08XUeFQpePWfiRKfGs4hBshT/zWvrmar82RpeDRo8qhb/RUi3fmYPLGODNWh2MI\nPfGpoaLCnJei/GGiAiKYFl2h\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@concert-ticketing-94601.iam.gserviceaccount.com",
+  "client_id": "113869436193398292189",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40concert-ticketing-94601.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -72,15 +72,23 @@ const createOrder = async (req, res) => {
 const getUserOrders = async (req, res) => {
   try {
     const user_id = req.user.id;
-    const orders = await Order.findAll({
-      where: { user_id },
+    const isAdmin = req.user.role === 'admin';
+    
+    const queryOptions = {
       include: [
         { model: Event, attributes: ['title', 'event_date', 'venue'] },
         { model: Ticket, attributes: ['category', 'price'] },
-        { model: Attendee, attributes: ['id', 'qr_code', 'check_in_status'] }
+        { model: Attendee, attributes: ['id', 'qr_code', 'check_in_status'] },
+        { model: User, attributes: ['id', 'full_name', 'email'] }
       ],
       order: [['created_at', 'DESC']]
-    });
+    };
+
+    if (!isAdmin) {
+      queryOptions.where = { user_id };
+    }
+
+    const orders = await Order.findAll(queryOptions);
 
     res.json({ success: true, data: orders });
   } catch (error) {
@@ -118,7 +126,7 @@ const updateOrderStatus = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { id } = req.params;
-    const { payment_status } = req.body; // 'paid', 'failed', 'refunded'
+    const payment_status = req.body.payment_status || req.body.status; // Support 'payment_status' or 'status'
 
     const order = await Order.findByPk(id, { transaction: t });
     if (!order) {
@@ -138,8 +146,8 @@ const updateOrderStatus = async (req, res) => {
           event_id: order.event_id,
           ticket_id: order.ticket_id,
           qr_code: uuidv4(), // Unique QR for each ticket
-          attendee_name: user.full_name,
-          attendee_email: user.email,
+          attendee_name: user ? user.full_name : 'Unknown',
+          attendee_email: user ? user.email : 'Unknown',
           check_in_status: 'not_checked'
         });
       }
