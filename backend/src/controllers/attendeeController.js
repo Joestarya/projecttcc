@@ -8,7 +8,7 @@ const getUserTickets = async (req, res) => {
     const attendees = await Attendee.findAll({
       where: { user_id },
       include: [
-        { model: Event, attributes: ['title', 'date', 'location'] },
+        { model: Event, attributes: ['title', 'event_date', 'venue'] },
         { model: Ticket, attributes: ['category'] }
       ]
     });
@@ -40,7 +40,7 @@ const validateQR = async (req, res) => {
     const attendee = await Attendee.findOne({
       where: { qr_code: qrCode },
       include: [
-        { model: Event, attributes: ['title', 'date'] },
+        { model: Event, attributes: ['title', 'event_date'] },
         { model: Ticket, attributes: ['category'] },
         { model: User, attributes: ['full_name', 'email'] }
       ]

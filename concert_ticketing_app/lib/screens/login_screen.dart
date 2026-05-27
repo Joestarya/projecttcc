@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'main_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,8 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // Use 10.0.2.2 for Android emulator to connect to localhost
-  final String apiUrl = 'http://10.0.2.2:5000/api/v1';
+  // Use localhost for Web, 10.0.2.2 for Android emulator
+  final String apiUrl = kIsWeb ? 'http://localhost:5001/api/v1' : 'http://10.0.2.2:5001/api/v1';
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -49,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Navigate to Home
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => MainScreen()),
         );
       } else {
         _showError(responseData['message'] ?? 'Login failed');

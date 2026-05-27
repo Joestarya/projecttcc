@@ -25,7 +25,7 @@ const createOrder = async (req, res) => {
     const total_price = ticket.price * quantity;
     const transaction_id = 'TRX-' + uuidv4().substring(0, 8).toUpperCase();
 
-    // Create order
+    // Create order with 'paid' status directly
     const order = await Order.create({
       user_id,
       event_id,
@@ -34,8 +34,27 @@ const createOrder = async (req, res) => {
       total_price,
       payment_method,
       transaction_id,
-      payment_status: 'pending'
+      payment_status: 'paid' // <--- INSTANT APPROVAL
     }, { transaction: t });
+
+    // Instantly generate QR Codes (Attendees)
+    const attendees = [];
+    const user = await User.findByPk(user_id, { transaction: t });
+    
+    for (let i = 0; i < quantity; i++) {
+      attendees.push({
+        order_id: order.id,
+        user_id: user_id,
+        event_id: event_id,
+        ticket_id: ticket_id,
+        qr_code: uuidv4(), // Unique QR for each ticket
+        attendee_name: user ? user.full_name : 'Unknown',
+        attendee_email: user ? user.email : 'Unknown',
+        check_in_status: 'not_checked'
+      });
+    }
+
+    await Attendee.bulkCreate(attendees, { transaction: t });
 
     // Update ticket sold count
     await ticket.increment('sold', { by: quantity, transaction: t });
@@ -56,8 +75,9 @@ const getUserOrders = async (req, res) => {
     const orders = await Order.findAll({
       where: { user_id },
       include: [
-        { model: Event, attributes: ['title', 'date', 'location'] },
-        { model: Ticket, attributes: ['category', 'price'] }
+        { model: Event, attributes: ['title', 'event_date', 'venue'] },
+        { model: Ticket, attributes: ['category', 'price'] },
+        { model: Attendee, attributes: ['id', 'qr_code', 'check_in_status'] }
       ],
       order: [['created_at', 'DESC']]
     });
@@ -77,7 +97,7 @@ const getOrderById = async (req, res) => {
     const order = await Order.findOne({
       where: req.user.role === 'admin' ? { id } : { id, user_id },
       include: [
-        { model: Event, attributes: ['title', 'date', 'location'] },
+        { model: Event, attributes: ['title', 'event_date', 'venue'] },
         { model: Ticket, attributes: ['category', 'price'] },
         { model: Attendee, attributes: ['id', 'qr_code', 'check_in_status'] }
       ]

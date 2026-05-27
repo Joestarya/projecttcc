@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,7 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  final String apiUrl = 'http://10.0.2.2:5000/api/v1';
+  // Use localhost for Web, 10.0.2.2 for Android emulator
+  final String apiUrl = kIsWeb ? 'http://localhost:5001/api/v1' : 'http://10.0.2.2:5001/api/v1';
 
   Future<void> _handleRegister() async {
     final fullName = _fullNameController.text.trim();

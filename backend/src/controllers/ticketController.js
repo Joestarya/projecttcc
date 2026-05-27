@@ -21,6 +21,8 @@ const createTicket = async (req, res) => {
 
     // Invalidate cache
     await delCache(`tickets_event_${event_id}`);
+    await delCache(`event_${event_id}`);
+    await delCache('all_events_*');
 
     res.status(201).json({ success: true, data: ticket });
   } catch (error) {
@@ -73,6 +75,8 @@ const updateTicket = async (req, res) => {
 
     // Invalidate cache
     await delCache(`tickets_event_${ticket.event_id}`);
+    await delCache(`event_${ticket.event_id}`);
+    await delCache('all_events_*');
 
     res.json({ success: true, data: ticket });
   } catch (error) {
@@ -95,6 +99,8 @@ const deleteTicket = async (req, res) => {
 
     // Invalidate cache
     await delCache(`tickets_event_${eventId}`);
+    await delCache(`event_${eventId}`);
+    await delCache('all_events_*');
 
     res.json({ success: true, message: 'Ticket deleted successfully' });
   } catch (error) {
